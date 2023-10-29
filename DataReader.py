@@ -1,7 +1,7 @@
 import os
 import pickle
 import numpy as np
-
+from ImageUtils import parse_record
 """ This script implements the functions for reading data.
 """
 
@@ -85,4 +85,5 @@ if __name__ == '__main__':
     # debugging
     x_train, y_train, x_test, y_test = load_data("/Users/vuh/Downloads/cifar-10-batches-py/")
     x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train, split_index=45000)
+    test = parse_record(x_train_new[1,:], True)
     print()

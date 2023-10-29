@@ -20,7 +20,7 @@ class ResNet(nn.Module):
             num_classes: A positive integer. Define the number of classes.
             first_num_filters: An integer. The number of filters to use for the
                 first block layer of the model. This number is then doubled
-                for each subsampling block layer.
+                for each subsample block layer.
         
         2. Classify a batch of input images.
 
