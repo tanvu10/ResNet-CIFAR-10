@@ -60,3 +60,13 @@ def preprocess_image(image, training):
     ### YOUR CODE HERE
 
     return image
+
+if __name__ == '__main__':
+
+    import os
+    import time
+    import torch
+    import torch.nn as nn
+    import numpy as np
+    from tqdm import tqdm
+    print('test')
