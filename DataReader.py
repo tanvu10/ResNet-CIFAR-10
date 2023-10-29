@@ -22,9 +22,41 @@ def load_data(data_dir):
         (dtype=np.int32)
     """
     ### YOUR CODE HERE
+    def unpickle(file):
+        with open(file, 'rb') as fo:
+            dict = pickle.load(fo, encoding='bytes')
+        return dict
+    
+    x_train = []
+    y_train = []
+    x_test = []
+    y_test = []
 
+    # load training batch
+    path = data_dir + 'data_batch_'
+    for i in range(1, 6):
+        batch_data = unpickle(path + f'{i}')
+        if i == 1:
+            x_train = batch_data[b'data']
+            y_train = batch_data[b'labels']
+        else:
+            x_train = np.vstack((x_train, batch_data[b'data']))
+            y_train += batch_data[b'labels']
+
+    # Load test batch
+    path = data_dir + 'test_batch'
+    test_data = unpickle(path)
+    x_test = test_data[b'data']
+    y_test = test_data[b'labels']
+
+    # Convert to correct data type format:
+    x_train = np.array(x_train, dtype=np.float32)
+    y_train = np.array(y_train, dtype=np.int32)
+
+    x_test = np.array(x_test, dtype=np.float32)
+    y_test = np.array(y_test, dtype=np.int32)
+    
     ### YOUR CODE HERE
-
     return x_train, y_train, x_test, y_test
 
 def train_vaild_split(x_train, y_train, split_index=45000):
@@ -48,3 +80,9 @@ def train_vaild_split(x_train, y_train, split_index=45000):
     y_valid = y_train[split_index:]
 
     return x_train_new, y_train_new, x_valid, y_valid
+
+if __name__ == '__main__':
+    # debugging
+    x_train, y_train, x_test, y_test = load_data("/Users/vuh/Downloads/cifar-10-batches-py/")
+    x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train, split_index=45000)
+    print()

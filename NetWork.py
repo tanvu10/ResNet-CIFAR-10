@@ -102,7 +102,7 @@ class batch_norm_relu_layer(nn.Module):
         ### YOUR CODE HERE
         
         ### YOUR CODE HERE
-
+    
 class standard_block(nn.Module):
     """ Creates a standard residual block for ResNet.
 
