@@ -59,8 +59,7 @@ class ResNet(nn.Module):
         self.start_layer = nn.Conv2d(in_channels=3,
                                      out_channels= first_num_filters, 
                                      kernel_size=(1,1), 
-                                     stride=1,
-                                     padding=1)
+                                     stride=1)
         ### YOUR CODE HERE
 
         # We do not include batch normalization or activation functions in V2
