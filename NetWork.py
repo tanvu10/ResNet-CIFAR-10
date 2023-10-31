@@ -54,7 +54,13 @@ class ResNet(nn.Module):
 
         ### YOUR CODE HERE
         # define conv1
-        
+
+        # conv(1x1) - map 3 RGB to 16 channel
+        self.start_layer = nn.Conv2d(in_channels=3,
+                                     out_channels= first_num_filters, 
+                                     kernel_size=(1,1), 
+                                     stride=1,
+                                     padding=1)
         ### YOUR CODE HERE
 
         # We do not include batch normalization or activation functions in V2
@@ -75,17 +81,26 @@ class ResNet(nn.Module):
         self.stack_layers = nn.ModuleList()
         for i in range(3):
             in_channel = out_channel if i != 0 else self.first_num_filters
-            out_channel = self.first_num_filters * (2**i)
+            
+            if self.resnet_version == 1:
+                out_channel = self.first_num_filters * (2**i)
+            else:
+                out_channel = in_channel*4
+
             strides = 1 if i == 0 else 2
+
             self.stack_layers.append(stack_layer(out_channel, block_fn, strides, self.resnet_size, in_channel))
-        self.output_layer = output_layer(out_channel*4, self.resnet_version, self.num_classes)
+        self.output_layer = output_layer(out_channel, self.resnet_version, self.num_classes)
     
     def forward(self, inputs):
         outputs = self.start_layer(inputs)
+
         if self.resnet_version == 1:
             outputs = self.batch_norm_relu_start(outputs)
+
         for i in range(3):
             outputs = self.stack_layers[i](outputs)
+
         outputs = self.output_layer(outputs)
         return outputs
 
@@ -106,7 +121,7 @@ class batch_norm_relu_layer(nn.Module):
         """
         # input size 4d
         (N, C, H, W)
-        # ouput size 4d
+        # output size 4d
         """
         ### YOUR CODE HERE
         output = self.batch_norm(inputs)
@@ -176,7 +191,7 @@ class standard_block(nn.Module):
 
     def forward(self, inputs: Tensor) -> Tensor:
         ### YOUR CODE HERE
-        
+
         if self.projection_shortcut is not None:
             shortcut = self.projection_shortcut(inputs)
         else:
@@ -282,17 +297,35 @@ class stack_layer(nn.Module):
     """
     def __init__(self, filters, block_fn, strides, resnet_size, first_num_filters) -> None:
         super(stack_layer, self).__init__()
-        filters_out = filters * 4 if block_fn is bottleneck_block else filters
+
+        # I would define in channels and out channels at the ResNet class 
+        # filters_out = filters * 4 if block_fn is bottleneck_block else filters
         ### END CODE HERE
         # projection_shortcut = bool variable, would create function inside the block class if True
         
+        in_channels = first_num_filters
+        out_channels = filters
+        self.stack = nn.Sequential()
+
         # Only the first block per stack_layer uses projection_shortcut and strides
+        self.stack.add_module("block1", block_fn(filters=out_channels, 
+                                                  projection_shortcut=True, 
+                                                  strides=strides, 
+                                                  first_num_filters=in_channels))
         
+        
+        for i in range(2, resnet_size+1):
+            self.stack.add_module(f"block{i}", block_fn(filters=out_channels, 
+                                                    projection_shortcut=False, 
+                                                    strides=1, 
+                                                    first_num_filters=out_channels))
+            
         ### END CODE HERE
     
     def forward(self, inputs: Tensor) -> Tensor:
         ### END CODE HERE
-        
+        output = self.stack(inputs)
+        return output
         ### END CODE HERE
 
 class output_layer(nn.Module):
@@ -311,10 +344,22 @@ class output_layer(nn.Module):
             self.bn_relu = batch_norm_relu_layer(filters, eps=1e-5, momentum=0.997)
         
         ### END CODE HERE
+        # Global average pooling layer
+        self.global_avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         
+        # Fully connected layer for classification
+        self.fc = nn.Linear(in_features=filters, 
+                            out_features=num_classes)
         ### END CODE HERE
     
     def forward(self, inputs: Tensor) -> Tensor:
         ### END CODE HERE
+        if self.resnet_version == 2:
+            inputs = self.bn_relu(inputs)
         
+        output = self.global_avg_pool(inputs)
+        output = torch.flatten(output, 1)
+        output = self.fc(output)
+        
+        return output
         ### END CODE HERE
