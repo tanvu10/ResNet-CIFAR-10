@@ -30,6 +30,8 @@ class ResNet(nn.Module):
         #layers         | 1     | 2n/3n  | 2n/3n  | 2n/3n  | 1           |
         #filters        | 16    | 16(*4) | 32(*4) | 64(*4) | num_classes |
 
+        # filter_num = num output channels
+
         n = #residual_blocks in each stack layer = self.resnet_size
         The standard_block has 2 layers each.
         The bottleneck_block has 3 layers each.
@@ -72,10 +74,11 @@ class ResNet(nn.Module):
 
         self.stack_layers = nn.ModuleList()
         for i in range(3):
-            filters = self.first_num_filters * (2**i)
+            in_channel = out_channel if i != 0 else self.first_num_filters
+            out_channel = self.first_num_filters * (2**i)
             strides = 1 if i == 0 else 2
-            self.stack_layers.append(stack_layer(filters, block_fn, strides, self.resnet_size, self.first_num_filters))
-        self.output_layer = output_layer(filters*4, self.resnet_version, self.num_classes)
+            self.stack_layers.append(stack_layer(out_channel, block_fn, strides, self.resnet_size, in_channel))
+        self.output_layer = output_layer(out_channel*4, self.resnet_version, self.num_classes)
     
     def forward(self, inputs):
         outputs = self.start_layer(inputs)
@@ -96,12 +99,20 @@ class batch_norm_relu_layer(nn.Module):
     def __init__(self, num_features, eps=1e-5, momentum=0.997) -> None:
         super(batch_norm_relu_layer, self).__init__()
         ### YOUR CODE HERE
-
+        self.batch_norm = nn.BatchNorm2d(num_features, eps=eps, momentum=momentum)
+        self.relu = nn.ReLU(inplace=True)
         ### YOUR CODE HERE
     def forward(self, inputs: Tensor) -> Tensor:
+        """
+        # input size 4d
+        (N, C, H, W)
+        # ouput size 4d
+        """
         ### YOUR CODE HERE
-        
+        output = self.batch_norm(inputs)
+        output = self.relu(output)
         ### YOUR CODE HERE
+        return output
     
 class standard_block(nn.Module):
     """ Creates a standard residual block for ResNet.
@@ -110,26 +121,71 @@ class standard_block(nn.Module):
         filters: A positive integer. The number of filters for the first 
             convolution.
         projection_shortcut: The function to use for projection shortcuts
-      		(typically a 1x1 convolution when downsampling the input).
+      		(typically a 1x1 convolution when down-sampling the input).
 		strides: A positive integer. The stride to use for the block. If
-			greater than 1, this block will ultimately downsample the input.
+			greater than 1, this block will ultimately down-sample the input.
         first_num_filters: An integer. The number of filters to use for the
             first block layer of the model.
     """
     def __init__(self, filters, projection_shortcut, strides, first_num_filters) -> None:
         super(standard_block, self).__init__()
         ### YOUR CODE HERE
-        if self.projection_shortcut is not None:
-            
-        ### YOUR CODE HERE
 
+        ## only use stride for first layer
+
+        ### first_num_filters = in_channel
+        ### filters = out_channel
+
+        in_channels = first_num_filters
+        out_channels = filters
+
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels=in_channels,
+                      out_channels=out_channels,
+                      kernel_size=(3,3),
+                      stride=strides, # decrease dimension
+                      padding=1),
+            nn.BatchNorm2d(num_features=out_channels),
+            nn.ReLU(inplace=True),
+
+            nn.Conv2d(in_channels=out_channels,
+                      out_channels=out_channels,
+                      kernel_size=(3,3),
+                      stride=1,
+                      padding=1),
+            nn.BatchNorm2d(num_features=out_channels)
+        )
+        
+        self.relu = nn.ReLU(inplace=True)
         ### YOUR CODE HERE
         
+        ### YOUR CODE HERE
+
+        # if first block, using projection shortcut
+        self.projection_shortcut = None
+        if projection_shortcut:
+            self.projection_shortcut = nn.Sequential(
+            nn.Conv2d(in_channels=in_channels,
+                      out_channels= out_channels, 
+                      kernel_size=(1,1), 
+                      stride=strides),
+            nn.BatchNorm2d(num_features=out_channels)
+        )
+
         ### YOUR CODE HERE
 
     def forward(self, inputs: Tensor) -> Tensor:
         ### YOUR CODE HERE
         
+        if self.projection_shortcut is not None:
+            shortcut = self.projection_shortcut(inputs)
+        else:
+            shortcut = inputs
+
+        output = self.block(inputs)
+        output += shortcut
+        output = self.relu(output)
+        return output            
         ### YOUR CODE HERE
 
 class bottleneck_block(nn.Module):
@@ -137,11 +193,11 @@ class bottleneck_block(nn.Module):
 
     Args:
         filters: A positive integer. The number of filters for the first 
-            convolution. NOTE: filters_out will be 4xfilters.
+            convolution. NOTE: filters_out will be 4*filters.
         projection_shortcut: The function to use for projection shortcuts
-      		(typically a 1x1 convolution when downsampling the input).
+      		(typically a 1x1 convolution when down-sampling the input).
 		strides: A positive integer. The stride to use for the block. If
-			greater than 1, this block will ultimately downsample the input.
+			greater than 1, this block will ultimately down-sample the input.
         first_num_filters: An integer. The number of filters to use for the
             first block layer of the model.
     """
@@ -152,14 +208,63 @@ class bottleneck_block(nn.Module):
         # Hint: Different from standard lib implementation, you need pay attention to 
         # how to define in_channel of the first bn and conv of each block based on
         # Args given above.
+
+        in_channels = first_num_filters
+        intermediate_channels = filters/4
+        out_channels = filters
+
+
+        self.block = nn.Sequential(
+        nn.BatchNorm2d(num_features=in_channels),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(in_channels=in_channels, 
+                    out_channels=intermediate_channels, 
+                    kernel_size=(1, 1), 
+                    stride=1),
+    
+        nn.BatchNorm2d(num_features=intermediate_channels),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(in_channels=intermediate_channels, 
+                    out_channels=intermediate_channels, 
+                    kernel_size=(3, 3), 
+                    stride=strides, 
+                    padding=1),
+    
+        nn.BatchNorm2d(num_features=intermediate_channels),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(in_channels=intermediate_channels, 
+                    out_channels=out_channels, 
+                    kernel_size=(1, 1), 
+                    stride=1)
+        )
         
+        # if first block, using projection shortcut
+        self.projection_shortcut = None
+        if projection_shortcut:
+            self.projection_shortcut = nn.Sequential(
+                nn.Conv2d(in_channels=in_channels, 
+                        out_channels=out_channels, 
+                        kernel_size=(1, 1), 
+                        stride=strides),
+                nn.BatchNorm2d(num_features=out_channels)
+            )
         ### YOUR CODE HERE
+
     
     def forward(self, inputs: Tensor) -> Tensor:
         ### YOUR CODE HERE
         # The projection shortcut should come after the first batch norm and ReLU
 		# since it performs a 1x1 convolution.
 
+        if self.projection_shortcut is not None:
+            shortcut = self.projection_shortcut(inputs)
+        else:
+            shortcut = inputs
+
+        output = self.block(inputs)
+        output += shortcut
+
+        return output 
         ### YOUR CODE HERE
 
 class stack_layer(nn.Module):
@@ -170,7 +275,7 @@ class stack_layer(nn.Module):
 			    convolution in a block.
 		block_fn: 'standard_block' or 'bottleneck_block'.
 		strides: A positive integer. The stride to use for the first block. If
-				greater than 1, this layer will ultimately downsample the input.
+				greater than 1, this layer will ultimately down-sample the input.
         resnet_size: #residual_blocks in each stack layer
         first_num_filters: An integer. The number of filters to use for the
             first block layer of the model.
@@ -179,7 +284,8 @@ class stack_layer(nn.Module):
         super(stack_layer, self).__init__()
         filters_out = filters * 4 if block_fn is bottleneck_block else filters
         ### END CODE HERE
-        # projection_shortcut = ?
+        # projection_shortcut = bool variable, would create function inside the block class if True
+        
         # Only the first block per stack_layer uses projection_shortcut and strides
         
         ### END CODE HERE
