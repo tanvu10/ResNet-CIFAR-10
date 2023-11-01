@@ -36,6 +36,8 @@ class Cifar(nn.Module):
                                                          step_size=self.config.lr_decay_step, 
                                                          gamma=0.1)
 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         ### YOUR CODE HERE
     
     def train(self, x_train, y_train, max_epoch):
@@ -63,9 +65,9 @@ class Cifar(nn.Module):
                 x_batch = np.array([parse_record(image, training=True) for image in curr_x_train[start:end]])
                 y_batch = curr_y_train[start:end]
 
-                # change to tensor type
-                x_batch = torch.tensor(x_batch, dtype=torch.float32)
-                y_batch = torch.tensor(y_batch, dtype=torch.long)
+                # change to tensor type and move to cpu/gpu
+                x_batch = torch.tensor(x_batch, dtype=torch.float32).to(self.device)
+                y_batch = torch.tensor(y_batch, dtype=torch.long).to(self.device)
 
                 outputs = self.network(x_batch)
                 loss = self.criterion(outputs, y_batch)
@@ -111,7 +113,7 @@ class Cifar(nn.Module):
                     image = parse_record(x[i], training=False)
                     # change dimension from [H, W, C] to [1, H, W, C]
                     image = image.squeeze(0)
-                    image = torch.tensor(image, dtype=torch.float32)
+                    image = torch.tensor(image, dtype=torch.float32).to(self.device)
 
                     output = self.network(image)
                     prob = nn.functional.softmax(output, dim=1)
