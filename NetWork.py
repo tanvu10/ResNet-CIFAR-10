@@ -339,6 +339,7 @@ class output_layer(nn.Module):
         super(output_layer, self).__init__()
         # Only apply the BN and ReLU for model that does pre_activation in each
 		# bottleneck block, e.g. resnet V2.
+        self.resnet_version = resnet_version
         if (resnet_version == 2):
             self.bn_relu = batch_norm_relu_layer(filters, eps=1e-5, momentum=0.997)
         

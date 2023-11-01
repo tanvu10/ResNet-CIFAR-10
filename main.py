@@ -19,6 +19,8 @@ def configure():
     parser.add_argument("--weight_decay", type=float, default=2e-4, help='weight decay rate')
     parser.add_argument("--modeldir", type=str, default='model_v1', help='model directory')
     parser.add_argument("--lr_decay_step", type=int, default=10, help='number of step (epoch) to decay lr')
+    parser.add_argument("--learning_rate", type=int, default=0.01, help='learning rate')
+
     ### YOUR CODE HERE
     return parser.parse_args()
 

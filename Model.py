@@ -28,7 +28,8 @@ class Cifar(nn.Module):
         # add L2 weight decay in the optimizer
         self.optimizer = torch.optim.SGD(self.network.parameters(), 
                                          lr=self.config.learning_rate, 
-                                         weight_decay=self.config.weight_decay)
+                                         weight_decay=self.config.weight_decay,
+                                         momentum=0.9)
         
         # add feature lr_decay by  = 1/10 every lr_decay_step
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, 
@@ -51,12 +52,6 @@ class Cifar(nn.Module):
             curr_x_train = x_train[shuffle_index]
             curr_y_train = y_train[shuffle_index]
 
-            ### YOUR CODE HERE
-            # Set the learning rate for this epoch
-            # Usage example: divide the initial learning rate by 10 after several epochs
-            self.scheduler.step()
-            ### YOUR CODE HERE
-            
             for i in range(num_batches):
                 ### YOUR CODE HERE
                 # Construct the current batch.
@@ -70,7 +65,7 @@ class Cifar(nn.Module):
 
                 # change to tensor type
                 x_batch = torch.tensor(x_batch, dtype=torch.float32)
-                y_batch = torch.tensor(y_batch, dtype=torch.int32)
+                y_batch = torch.tensor(y_batch, dtype=torch.long)
 
                 outputs = self.network(x_batch)
                 loss = self.criterion(outputs, y_batch)
@@ -84,6 +79,13 @@ class Cifar(nn.Module):
                 self.optimizer.step()
 
                 print('Batch {:d}/{:d} Loss {:.6f}'.format(i, num_batches, loss), end='\r', flush=True)
+            
+            ### YOUR CODE HERE
+            # Set the learning rate for this epoch
+            # update lr after self.optimizer.step()
+            # Usage example: divide the initial learning rate by 10 after several epochs
+            self.scheduler.step()
+            ### YOUR CODE HERE
             
             duration = time.time() - start_time
             print('Epoch {:d} Loss {:.6f} Duration {:.3f} seconds.'.format(epoch, loss, duration))
