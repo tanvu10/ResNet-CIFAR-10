@@ -39,11 +39,11 @@ def main(config):
     # model = Cifar(config).cuda()
     model = Cifar(config)
     model = model.to(model.device)
-    print(f'detected {model.device}, using {model.device}')
+    print(f'detected {model.device}, now using {model.device}')
 
     ### YOUR CODE HERE
     # First step: use the train_new set and the valid set to choose hyperparameters.
-    model.train(x_train_new, y_train_new, 200)
+    # model.train(x_train_new, y_train_new, 200)
     model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
     # Second step: with hyperparameters determined in the first run, re-train

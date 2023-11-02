@@ -112,7 +112,7 @@ class Cifar(nn.Module):
                 with torch.no_grad():
                     image = parse_record(x[i], training=False)
                     # change dimension from [H, W, C] to [1, H, W, C]
-                    image = image.squeeze(0)
+                    image = np.expand_dims(image, axis=0)
                     image = torch.tensor(image, dtype=torch.float32).to(self.device)
 
                     output = self.network(image)
