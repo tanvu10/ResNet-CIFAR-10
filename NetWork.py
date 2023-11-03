@@ -224,7 +224,7 @@ class bottleneck_block(nn.Module):
         # Args given above.
 
         in_channels = first_num_filters
-        intermediate_channels = filters/4
+        intermediate_channels = filters//4
         out_channels = filters
 
 
