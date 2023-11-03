@@ -101,6 +101,7 @@ class Cifar(nn.Module):
         # change to test mode (since using BN params from training process)
         self.network.eval()
         print('### Test or Validation ###')
+        accuracy_list = []
         for checkpoint_num in checkpoint_num_list:
             checkpoint_file = os.path.join(self.config.modeldir, 'model-%d.ckpt'%(checkpoint_num))
             self.load(checkpoint_file)
@@ -125,7 +126,9 @@ class Cifar(nn.Module):
             y = torch.tensor(y)
             preds = torch.tensor(preds)
             print('Test accuracy: {:.4f}'.format(torch.sum(preds==y)/y.shape[0]))
-    
+            accuracy_list.append(torch.sum(preds==y)/y.shape[0])
+        return accuracy_list
+
     def save(self, epoch):
         checkpoint_path = os.path.join(self.config.modeldir, 'model-%d.ckpt'%(epoch))
         os.makedirs(self.config.modeldir, exist_ok=True)
