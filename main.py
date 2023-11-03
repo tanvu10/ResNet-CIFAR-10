@@ -139,7 +139,7 @@ def main():
     model = model.to(model.device)
     print(f'detected {model.device}, now using {model.device}')
     # train on full train set
-    model.train(x_train, y_train, 20)
+    model.train(x_train, y_train, 50)
 
     # Third step: after re-training, test your model on the test set.
     # Report testing accuracy in your hard-copy report.
