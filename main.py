@@ -65,8 +65,8 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 model = Cifar(config)
                 model = model.to(model.device)
                 print(f'detected {model.device}, now using {model.device}')
-                model.train(x_train_new, y_train_new, [50])
-                accuracy = model.test_or_validate(x_valid, y_valid, 50)[0]
+                model.train(x_train_new, y_train_new, 50)
+                accuracy = model.test_or_validate(x_valid, y_valid, [50])[0]
 
                 # save for reporting
                 hyperparams_info = {
