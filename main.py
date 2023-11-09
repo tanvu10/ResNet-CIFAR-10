@@ -70,7 +70,15 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                     # This line is the key to multi-GPU usage
                     model = nn.DataParallel(model)
                 
-                model = model.to(model.device)
+                # model = model.to(model.device)
+
+                if isinstance(model, torch.nn.DataParallel):
+                    device = next(model.module.parameters()).device
+                else:
+                    device = next(model.parameters()).device
+                model = model.to(device)
+                
+
                 print(f'detected {model.device}, now using {model.device}')
                 model.train(x_train_new, y_train_new, 50)
                 accuracy = model.test_or_validate(x_valid, y_valid, [50])[0]
@@ -149,7 +157,14 @@ def main():
         # This line is the key to multi-GPU usage
         model = nn.DataParallel(model)
 
-    model = model.to(model.device)
+    # model = model.to(model.device)
+
+    if isinstance(model, torch.nn.DataParallel):
+        device = next(model.module.parameters()).device
+    else:
+        device = next(model.parameters()).device
+    model = model.to(device)
+
     print(f'detected {model.device}, now using {model.device}')
     # train on full train set
     model.train(x_train, y_train, 50)
