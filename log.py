@@ -1,3 +1,4 @@
+import sys
 class DualLogger:
     def __init__(self, filepath):
         self.terminal = sys.stdout
