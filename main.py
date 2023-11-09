@@ -73,18 +73,20 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 accuracy = model.test_or_validate(x_valid, y_valid, [50])[0]
 
                 # save for reporting
+
+                
                 hyperparams_info = {
                     'model_valid_ver': i,
                     'resnet_version': resnet_version,
                     'resnet_size': resnet_size,
                     'batch_size': batch_size,
-                    'accuracy': accuracy
+                    'accuracy': accuracy.item()
                 }
                 all_hyperparams_info.append(hyperparams_info)
 
 
-                if accuracy > best_accuracy:
-                    best_accuracy = accuracy
+                if accuracy.item() > best_accuracy:
+                    best_accuracy = accuracy.item()
                     best_hyperparams = hyperparams_info
 
                 i += 1
@@ -107,58 +109,56 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
 def main():
 
     log_file_path = "resnet_log.txt"
-    # Start logging to both terminal and file
-    sys.stdout = DualLogger(log_file_path)
+    with DualLogger(log_file_path) as logger:
+        sys.stdout = logger
 
-    print("--- Preparing Data ---")
+        print("--- Preparing Data ---")
 
-    ### YOUR CODE HERE
-    # data_dir = "/Users/vuh/Downloads/cifar-10-batches-py/"
-    data_dir = '/gpfs/scratch/vhuynh/cifar-10-batches-py/'
+        ### YOUR CODE HERE
+        # data_dir = "/Users/vuh/Downloads/cifar-10-batches-py/"
+        data_dir = '/gpfs/scratch/vhuynh/cifar-10-batches-py/'
 
-    ### YOUR CODE HERE
-    x_train, y_train, x_test, y_test = load_data(data_dir)
-    x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train)
+        ### YOUR CODE HERE
+        x_train, y_train, x_test, y_test = load_data(data_dir)
+        x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train)
 
-    # model = Cifar(config).cuda()
-    
-    ### YOUR CODE HERE
-    # First step: use the train_new set and the valid set to choose hyperparameters.
-    # model.train(x_train_new, y_train_new, 200)
-    # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
+        # model = Cifar(config).cuda()
+        
+        ### YOUR CODE HERE
+        # First step: use the train_new set and the valid set to choose hyperparameters.
+        # model.train(x_train_new, y_train_new, 200)
+        # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
-    hyperparameter_space = {
-    'batch_size': [16, 32, 64, 128],
-    'resnet_size': [2, 3, 4],
-    'resnet_version': [1, 2]
-    }
-    best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
+        hyperparameter_space = {
+        'batch_size': [16, 32, 64, 128],
+        'resnet_size': [2, 3, 4],
+        'resnet_version': [1, 2]
+        }
+        best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
 
-    
-    # Second step: with hyperparameters determined in the first run, re-train
-    # your model on the original train set.
-    current_directory = os.getcwd()
+        
+        # Second step: with hyperparameters determined in the first run, re-train
+        # your model on the original train set.
+        current_directory = os.getcwd()
 
-    config = Config()
-    config.resnet_version = best_hyperparams['resnet_version']
-    config.resnet_size = best_hyperparams['resnet_size']
-    config.batch_size = best_hyperparams['batch_size']
-    config.modeldir = current_directory + f'/final_model'
-    model = Cifar(config)
-    model = model.to(model.device)
+        config = Config()
+        config.resnet_version = best_hyperparams['resnet_version']
+        config.resnet_size = best_hyperparams['resnet_size']
+        config.batch_size = best_hyperparams['batch_size']
+        config.modeldir = current_directory + f'/final_model'
+        model = Cifar(config)
+        model = model.to(model.device)
 
-    print(f'detected {model.device}, now using {model.device}')
-    # train on full train set
-    model.train(x_train, y_train, 50)
+        print(f'detected {model.device}, now using {model.device}')
+        # train on full train set
+        model.train(x_train, y_train, 50)
 
-    # Third step: after re-training, test your model on the test set.
-    # Report testing accuracy in your hard-copy report.
-    final_accuracy = model.test_or_validate(x_test, y_test, [20])[0]
-    print(f'final accuracy is {final_accuracy}')
-    ### END CODE HERE
+        # Third step: after re-training, test your model on the test set.
+        # Report testing accuracy in your hard-copy report.
+        final_accuracy = model.test_or_validate(x_test, y_test, [20])[0]
+        print(f'final accuracy is {final_accuracy}')
+        ### END CODE HERE
 
-    sys.stdout.log.close()
-    sys.stdout = sys.stdout.terminal
 
 if __name__ == "__main__":
     # os.environ['CUDA_VISIBLE_DEVICES'] = '0'

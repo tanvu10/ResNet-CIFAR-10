@@ -65,23 +65,26 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 config.resnet_size = resnet_size
                 config.batch_size = batch_size
                 if resnet_version == 1:
-                    config.modeldir = valid_model_path + f'/resnet_110'
+                    config.modeldir = valid_model_path + f'/resnet_110_{batch_size}'
                 else:
-                    config.modeldir = valid_model_path + f'/resnet_164'
+                    config.modeldir = valid_model_path + f'/resnet_164_{batch_size}'
                     
                 model = Cifar(config)
                 model = model.to(model.device)
 
                 print(f'detected {model.device}, now using {model.device}')
-                model.train(x_train_new, y_train_new, 50)
+                model.train(x_train_new, y_train_new, 30)
                 best_epoch = None
                 sub_best_accuracy = 0
                 
-                accuracy = model.test_or_validate(x_valid, y_valid, [10, 20, 30, 40, 50])
-                for i in range(len(accuracy)):
-                    if accuracy[i] > sub_best_accuracy:
-                        sub_best_accuracy = accuracy[i]
-                        best_epoch = int((i+1)*10)
+                accuracy = model.test_or_validate(x_valid, y_valid, [10, 20, 30])
+
+                for idx, acc in enumerate(accuracy):
+                    acc_value = acc.item()  # Converts the single-element tensor to a float
+                    if acc_value > sub_best_accuracy:
+                        sub_best_accuracy = acc_value
+                        best_epoch = (idx + 1) * 10
+                
 
                 # save for reporting
                 hyperparams_info = {
@@ -142,7 +145,7 @@ def main():
         # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
         hyperparameter_space = {
-        'batch_size': [64, 128],
+        'batch_size': [128, 256],
         'resnet_size': [18],
         'resnet_version': [1, 2]
         }
@@ -162,7 +165,7 @@ def main():
 
         print(f'detected {model.device}, now using {model.device}')
         # train on full train set
-        model.train(x_train, y_train, 50)
+        model.train(x_train, y_train, 30)
 
         # Third step: after re-training, test your model on the test set.
         # Report testing accuracy in your hard-copy report.
