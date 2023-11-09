@@ -5,6 +5,7 @@ import torch
 import json
 import os
 import argparse
+import torch.nn as nn
 
 # def configure():
 #     parser = argparse.ArgumentParser()
@@ -63,6 +64,12 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 config.batch_size = batch_size
                 config.modeldir = valid_model_path + f'/model_valid_{i}'
                 model = Cifar(config)
+
+                if torch.cuda.device_count() > 1:
+                    print(f"Let's use {torch.cuda.device_count()} GPUs!")
+                    # This line is the key to multi-GPU usage
+                    model = nn.DataParallel(model)
+                
                 model = model.to(model.device)
                 print(f'detected {model.device}, now using {model.device}')
                 model.train(x_train_new, y_train_new, 50)
@@ -136,6 +143,12 @@ def main():
     config.batch_size = best_hyperparams['batch_size']
     config.modeldir = current_directory + f'/final_model'
     model = Cifar(config)
+
+    if torch.cuda.device_count() > 1:
+        print(f"Let's use {torch.cuda.device_count()} GPUs!")
+        # This line is the key to multi-GPU usage
+        model = nn.DataParallel(model)
+
     model = model.to(model.device)
     print(f'detected {model.device}, now using {model.device}')
     # train on full train set
@@ -148,5 +161,5 @@ def main():
     ### END CODE HERE
 
 if __name__ == "__main__":
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     main()
