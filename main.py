@@ -6,6 +6,7 @@ import json
 import os
 import argparse
 import torch.nn as nn
+import sys
 
 # def configure():
 #     parser = argparse.ArgumentParser()
@@ -77,7 +78,7 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 else:
                     device = next(model.parameters()).device
                 model = model.to(device)
-                
+
 
                 print(f'detected {model.device}, now using {model.device}')
                 model.train(x_train_new, y_train_new, 50)
@@ -116,65 +117,76 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
     
 
 def main():
-    print("--- Preparing Data ---")
 
-    ### YOUR CODE HERE
-    # data_dir = "/Users/vuh/Downloads/cifar-10-batches-py/"
-    data_dir = '/gpfs/scratch/vhuynh/cifar-10-batches-py/'
+    log_file_path = "resnet_log.txt"
+    with open(log_file_path, "w") as log_file:
+        sys.stdout = log_file  # Redirect stdout to log file
+        sys.stderr = log_file  # Redirect stderr to log file (optional, if you want to log errors as well)
 
-    ### YOUR CODE HERE
-    x_train, y_train, x_test, y_test = load_data(data_dir)
-    x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train)
+        print("--- Preparing Data ---")
 
-    # model = Cifar(config).cuda()
-    
-    ### YOUR CODE HERE
-    # First step: use the train_new set and the valid set to choose hyperparameters.
-    # model.train(x_train_new, y_train_new, 200)
-    # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
+        ### YOUR CODE HERE
+        # data_dir = "/Users/vuh/Downloads/cifar-10-batches-py/"
+        data_dir = '/gpfs/scratch/vhuynh/cifar-10-batches-py/'
 
-    hyperparameter_space = {
-    'batch_size': [16, 32, 64, 128],
-    'resnet_size': [2, 3, 4],
-    'resnet_version': [1, 2]
-    }
-    best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
+        ### YOUR CODE HERE
+        x_train, y_train, x_test, y_test = load_data(data_dir)
+        x_train_new, y_train_new, x_valid, y_valid = train_vaild_split(x_train, y_train)
 
-    
-    # Second step: with hyperparameters determined in the first run, re-train
-    # your model on the original train set.
-    current_directory = os.getcwd()
+        # model = Cifar(config).cuda()
+        
+        ### YOUR CODE HERE
+        # First step: use the train_new set and the valid set to choose hyperparameters.
+        # model.train(x_train_new, y_train_new, 200)
+        # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
-    config = Config()
-    config.resnet_version = best_hyperparams['resnet_version']
-    config.resnet_size = best_hyperparams['resnet_size']
-    config.batch_size = best_hyperparams['batch_size']
-    config.modeldir = current_directory + f'/final_model'
-    model = Cifar(config)
+        hyperparameter_space = {
+        'batch_size': [16, 32, 64, 128],
+        'resnet_size': [2, 3, 4],
+        'resnet_version': [1, 2]
+        }
+        best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
 
-    if torch.cuda.device_count() > 1:
-        print(f"Let's use {torch.cuda.device_count()} GPUs!")
-        # This line is the key to multi-GPU usage
-        model = nn.DataParallel(model)
+        
+        # Second step: with hyperparameters determined in the first run, re-train
+        # your model on the original train set.
+        current_directory = os.getcwd()
 
-    # model = model.to(model.device)
+        config = Config()
+        config.resnet_version = best_hyperparams['resnet_version']
+        config.resnet_size = best_hyperparams['resnet_size']
+        config.batch_size = best_hyperparams['batch_size']
+        config.modeldir = current_directory + f'/final_model'
+        model = Cifar(config)
 
-    if isinstance(model, torch.nn.DataParallel):
-        device = next(model.module.parameters()).device
-    else:
-        device = next(model.parameters()).device
-    model = model.to(device)
+        if torch.cuda.device_count() > 1:
+            print(f"Let's use {torch.cuda.device_count()} GPUs!")
+            # This line is the key to multi-GPU usage
+            model = nn.DataParallel(model)
 
-    print(f'detected {model.device}, now using {model.device}')
-    # train on full train set
-    model.train(x_train, y_train, 50)
+        # model = model.to(model.device)
 
-    # Third step: after re-training, test your model on the test set.
-    # Report testing accuracy in your hard-copy report.
-    final_accuracy = model.test_or_validate(x_test, y_test, [20])[0]
-    print(f'final accuracy is {final_accuracy}')
-    ### END CODE HERE
+        if isinstance(model, torch.nn.DataParallel):
+            device = next(model.module.parameters()).device
+        else:
+            device = next(model.parameters()).device
+        model = model.to(device)
+
+        print(f'detected {model.device}, now using {model.device}')
+        # train on full train set
+        model.train(x_train, y_train, 50)
+
+        # Third step: after re-training, test your model on the test set.
+        # Report testing accuracy in your hard-copy report.
+        final_accuracy = model.test_or_validate(x_test, y_test, [20])[0]
+        print(f'final accuracy is {final_accuracy}')
+        ### END CODE HERE
+
+        # Don't forget to reset stdout and stderr if needed
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
 if __name__ == "__main__":
     # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     main()
+    
