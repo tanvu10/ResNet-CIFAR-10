@@ -65,20 +65,7 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
                 config.batch_size = batch_size
                 config.modeldir = valid_model_path + f'/model_valid_{i}'
                 model = Cifar(config)
-
-                if torch.cuda.device_count() > 1:
-                    print(f"Let's use {torch.cuda.device_count()} GPUs!")
-                    # This line is the key to multi-GPU usage
-                    model = nn.DataParallel(model)
-                
-                # model = model.to(model.device)
-
-                if isinstance(model, torch.nn.DataParallel):
-                    device = next(model.module.parameters()).device
-                else:
-                    device = next(model.parameters()).device
-                model = model.to(device)
-
+                model = model.to(model.device)
 
                 print(f'detected {model.device}, now using {model.device}')
                 model.train(x_train_new, y_train_new, 50)
@@ -158,19 +145,7 @@ def main():
     config.batch_size = best_hyperparams['batch_size']
     config.modeldir = current_directory + f'/final_model'
     model = Cifar(config)
-
-    if torch.cuda.device_count() > 1:
-        print(f"Let's use {torch.cuda.device_count()} GPUs!")
-        # This line is the key to multi-GPU usage
-        model = nn.DataParallel(model)
-
-    # model = model.to(model.device)
-
-    if isinstance(model, torch.nn.DataParallel):
-        device = next(model.module.parameters()).device
-    else:
-        device = next(model.parameters()).device
-    model = model.to(device)
+    model = model.to(model.device)
 
     print(f'detected {model.device}, now using {model.device}')
     # train on full train set
