@@ -50,7 +50,7 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
     best_hyperparams = {}
 
     current_directory = os.getcwd()
-    valid_model_path = current_directory + '/model_valid'
+    valid_model_path = current_directory + '/model_valid_a100'
 
 
     for resnet_version in hyperparameter_space['resnet_version']:
