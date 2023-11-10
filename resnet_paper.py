@@ -170,12 +170,13 @@ def main():
 
         print(f'detected {model.device}, now using {model.device}')
         # train on full train set
-        model.train(x_train, y_train, 30)
+        # model.train(x_train, y_train, 30)
 
         # Third step: after re-training, test your model on the test set.
         # Report testing accuracy in your hard-copy report.
-        final_accuracy = model.test_or_validate(x_test, y_test, [best_hyperparams['epoch']])[0]
-        print(f'final accuracy is {final_accuracy}')
+        # final_accuracy = model.test_or_validate(x_test, y_test, [best_hyperparams['epoch']])[0]
+        final_accuracy = model.test_or_validate(x_test, y_test, [20, 30])
+        # print(f'final accuracy is {final_accuracy}')
         ### END CODE HERE
 
         
