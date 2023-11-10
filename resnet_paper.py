@@ -122,7 +122,7 @@ def tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid
 
 def main():
 
-    log_file_path = "resnet_paper_log.txt"
+    log_file_path = "resnet_paper_final_model_log.txt"
     # Start logging to both terminal and file
     with DualLogger(log_file_path) as logger:
         sys.stdout = logger
