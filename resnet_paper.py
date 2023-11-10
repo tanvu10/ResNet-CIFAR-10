@@ -144,16 +144,21 @@ def main():
         # model.train(x_train_new, y_train_new, 200)
         # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
-        hyperparameter_space = {
-        'batch_size': [128, 256],
-        'resnet_size': [18],
-        'resnet_version': [1, 2]
-        }
-        best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
+        # hyperparameter_space = {
+        # 'batch_size': [128, 256],
+        # 'resnet_size': [18],
+        # 'resnet_version': [1, 2]
+        # }
+        # best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
 
+        
         # Second step: with hyperparameters determined in the first run, re-train
         # your model on the original train set.
         current_directory = os.getcwd()
+
+        best_param_path = os.path.join(current_directory, 'best_hyperparams_paper.json')
+        with open(best_param_path, 'r') as f:
+            best_hyperparams = json.load(f)
 
         config = Config()
         config.resnet_version = best_hyperparams['resnet_version']
