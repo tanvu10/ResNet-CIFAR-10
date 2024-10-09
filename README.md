@@ -43,6 +43,7 @@ Clone this repository:
 ```bash
 git clone https://github.com/tanvu10/ResNet-CIFAR-10.git
 cd ResNet-CIFAR-10
+pip install -r requirements.txt
 ```
 
 ### Running the Model
@@ -52,4 +53,4 @@ python main.py
 ```
 
 ## Documentation
-For more details on the architecture and usage, refer to the inline comments and ***ResNet_archi_doc.pdf file***.
+For more details on the architecture and usage, refer to the inline comments and the docs folder
