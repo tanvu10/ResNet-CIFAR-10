@@ -144,12 +144,12 @@ def main():
         # model.train(x_train_new, y_train_new, 200)
         # model.test_or_validate(x_valid, y_valid, [160, 170, 180, 190, 200])
 
-        # hyperparameter_space = {
-        # 'batch_size': [128, 256],
-        # 'resnet_size': [18],
-        # 'resnet_version': [1, 2]
-        # }
-        # best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
+        hyperparameter_space = {
+        'batch_size': [128, 256],
+        'resnet_size': [18],
+        'resnet_version': [1, 2]
+        }
+        best_hyperparams = tune_hyperparameters(hyperparameter_space, x_train_new, y_train_new, x_valid, y_valid)
 
         
         # Second step: with hyperparameters determined in the first run, re-train
@@ -175,7 +175,7 @@ def main():
         # Third step: after re-training, test your model on the test set.
         # Report testing accuracy in your hard-copy report.
         # final_accuracy = model.test_or_validate(x_test, y_test, [best_hyperparams['epoch']])[0]
-        final_accuracy = model.test_or_validate(x_test, y_test, [20, 30])
+        final_accuracy = model.test_or_validate(x_test, y_test, [30])
         # print(f'final accuracy is {final_accuracy}')
         ### END CODE HERE
 
